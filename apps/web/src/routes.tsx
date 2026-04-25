@@ -68,7 +68,6 @@ function useAuthGuard() {
 
   if (isReconnecting && !disconnected) return { status: "loading" as const };
   if (!isConnected || disconnected) return { status: "redirect" as const };
-  if (!role) return { status: "no-role" as const };
   return {
     status: "ok" as const,
     role,
@@ -222,26 +221,12 @@ function HomePage() {
 
 function AppPage() {
   const guard = useAuthGuard();
-  const router = useRouter();
 
   if (guard.status === "loading") {
     return <div className="app-shell">Checking wallet...</div>;
   }
   if (guard.status === "redirect") {
     return <Navigate replace to="/" />;
-  }
-  if (guard.status === "no-role") {
-    return (
-      <div className="page-stack">
-        <p>Elige tu rol:</p>
-        <RoleSelector
-          onSelect={(r) => {
-            setRole(r);
-            router.invalidate();
-          }}
-        />
-      </div>
-    );
   }
 
   const { role } = guard;
@@ -603,7 +588,7 @@ function LiveOpportunityCard({ id }: { id: number }) {
     progress: Math.min(progress, 100),
     status: isActive && !isConsolidated ? "Activa" : "Cerrada",
     providers: Number(commitmentCount ?? 0n),
-    imageUrl: campaign?.imageUrl,
+    imageUrl: campaign?.imageUrl ?? "/masa_critica_logo_icon_transparent.png",
     imageClass: "opportunity-photo-collage",
     action: "details",
   };
@@ -786,7 +771,7 @@ function DemandLoader({ id, filter }: { id: number; filter: string }) {
 
   const campaign = findCampaignByTitle(demand.title);
 
-  return <DemandCard id={id} demand={demand} imageUrl={campaign?.imageUrl} />;
+  return <DemandCard id={id} demand={demand} imageUrl={campaign?.imageUrl ?? "/masa_critica_logo_icon_transparent.png"} />;
 }
 
 function CreateDemandPage() {
