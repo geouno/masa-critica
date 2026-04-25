@@ -1,0 +1,22 @@
+{
+  "name": "monad-blitz-gdl",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run dev:web",
+    "dev:web": "bun run --cwd apps/web dev",
+    "build": "bun run build:web",
+    "build:web": "bun run --cwd apps/web build",
+    "check": "bun run check:web",
+    "check:web": "bun run --cwd apps/web check",
+    "format": "biome format --write .",
+    "lint": "biome check ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13"
+  }
+}
