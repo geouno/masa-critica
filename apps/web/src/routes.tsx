@@ -8,6 +8,23 @@ import {
   useParams,
   useRouter,
 } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  Bell,
+  Calendar,
+  ExternalLink,
+  FileText,
+  Handshake,
+  Home,
+  MapPin,
+  Megaphone,
+  MessageCircle,
+  PackageCheck,
+  Send,
+  ShoppingCart,
+  Star,
+  User,
+} from "lucide-react";
 import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { CommitmentForm } from "./components/CommitmentForm";
@@ -27,6 +44,7 @@ import {
   parseMXN,
 } from "./lib/contracts";
 import { getDisconnectPreference } from "./lib/disconnectPreference";
+import { findMockAccount, getDemoAccountForRole, mockAccounts } from "./lib/mockDb";
 import { clearRole, getRole, type Role, setRole } from "./lib/role";
 import { type MintInput, mintSchema } from "./lib/schemas";
 
@@ -217,39 +235,364 @@ function AppPage() {
 
   const { role } = guard;
 
-  return (
-    <div className="app-layout">
-      <Navbar onSettings={() => router.navigate({ to: "/app/settings" })} />
-      <div className="app-content">
-        {role === "distributor" ? <DistributorDashboard /> : <SupplierDashboard />}
-      </div>
-    </div>
-  );
+  return role === "distributor" ? <DistributorDashboard /> : <SupplierDashboard />;
 }
 
 function DistributorDashboard() {
+  return <DemoDashboard role="distributor" />;
+}
+
+function SupplierDashboard() {
+  return <DemoDashboard role="supplier" />;
+}
+
+type DemoOpportunity = {
+  title: string;
+  buyer: string;
+  location: string;
+  deadline: string;
+  description: string;
+  target: string;
+  committed: string;
+  remaining: string;
+  progress: number;
+  status: "Activa" | "Proxima";
+  providers: number;
+  imageClass: string;
+  action: "details" | "reminder";
+};
+
+const demoOpportunities: DemoOpportunity[] = [
+  {
+    title: "Bebidas naturales para cafeterias",
+    buyer: "Cadenas de cafeterias",
+    location: "Entrega en Jalisco",
+    deadline: "30 Jun 2026",
+    description:
+      "Buscamos bebidas naturales, listas para refrigerador, con empaque individual y 3+ meses de vida de anaquel.",
+    target: "$300,000",
+    committed: "$185,000 comprometido",
+    remaining: "$115,000 restante",
+    progress: 62,
+    status: "Activa",
+    providers: 11,
+    imageClass: "opportunity-photo-collage",
+    action: "details",
+  },
+  {
+    title: "Snacks saludables para OXXO",
+    buyer: "OXXO",
+    location: "Entrega Nacional",
+    deadline: "15 Jul 2026",
+    description:
+      "Snacks saludables, empaques individuales, con certificaciones basicas.",
+    target: "$500,000",
+    committed: "$140,000 comprometido",
+    remaining: "$360,000 restante",
+    progress: 28,
+    status: "Activa",
+    providers: 8,
+    imageClass: "opportunity-photo-snacks",
+    action: "details",
+  },
+  {
+    title: "Lacteos artesanales premium",
+    buyer: "Hoteles y restaurantes",
+    location: "CDMX y Area Metropolitana",
+    deadline: "01 Ago 2026",
+    description: "Quesos, yogures y lacteos artesanales de alta calidad.",
+    target: "$250,000",
+    committed: "Apertura: 10 May 2026",
+    remaining: "Lista de espera",
+    progress: 0,
+    status: "Proxima",
+    providers: 0,
+    imageClass: "opportunity-photo-dairy",
+    action: "reminder",
+  },
+];
+
+function DemoDashboard({ role }: { role: Role }) {
+  const { address } = useAccount();
+  const router = useRouter();
+  const account = findMockAccount(address) ?? getDemoAccountForRole(role);
+  const buyerAccount =
+    mockAccounts.find((item) => item.kind === "buyer") ?? getDemoAccountForRole("distributor");
+  const producerAccount =
+    mockAccounts.find((item) => item.kind === "producer") ?? getDemoAccountForRole("supplier");
+  const greeting = `Hola, ${account.displayName}!`;
+
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
-        <h2>Mis demandas</h2>
-        <Link className="btn-primary" to="/app/demand/new">
-          + Nueva demanda
+    <div className="demo-app">
+      <aside className="demo-sidebar" aria-label="Principal">
+        <Link className="demo-brand" to="/">
+          <img src="/masa_critica_logo_icon_transparent.png" alt="" />
+          <span>Masa Critica</span>
         </Link>
-      </div>
-      <DemandList filter="all" />
+        <nav className="demo-nav">
+          <a className="active" href="/app">
+            <Home size={20} strokeWidth={1.9} />
+            Inicio
+          </a>
+          <a href="/app#opportunities">
+            <PackageCheck size={20} strokeWidth={1.9} />
+            Oportunidades
+          </a>
+          <a href="/app#offers">
+            <Send size={20} strokeWidth={1.9} />
+            Mis ofertas
+          </a>
+          <a href="/app#commitments">
+            <Handshake size={20} strokeWidth={1.9} />
+            Mis compromisos
+          </a>
+          <a href="/app/settings">
+            <User size={20} strokeWidth={1.9} />
+            Perfil
+          </a>
+        </nav>
+        <div className="buyer-card">
+          <strong>¿Eres comprador?</strong>
+          <p>Publica una oportunidad de compra y recibe ofertas.</p>
+          <Link className="demo-secondary-button" to="/app/demand/new">
+            Publicar oportunidad
+          </Link>
+        </div>
+        <div className="demo-user">
+          <span>{account.initials}</span>
+          <div>
+            <strong>{account.displayName}</strong>
+            <small>{account.verification.label}</small>
+          </div>
+        </div>
+      </aside>
+
+      <section className="demo-main">
+        <header className="demo-topbar">
+          <div>
+            <h1>{greeting} <span aria-hidden="true">👋</span></h1>
+            <p>Conecta tu produccion con grandes oportunidades.</p>
+          </div>
+          <div className="demo-wallet-row">
+            <span className="demo-bell">
+              <Bell size={22} strokeWidth={1.9} />
+              <b>3</b>
+            </span>
+            <span className="demo-pill">
+              <i />
+              Monad Testnet
+            </span>
+            <span className="demo-address">
+              <span className="demo-token-dot" />
+              {shortDemoAddress(account.address)}
+            </span>
+          </div>
+        </header>
+
+        <div className="demo-grid">
+          <div className="demo-left">
+            <section className="demo-hero">
+              <div>
+                <h2>Convierte tu capacidad en oportunidades reales</h2>
+                <p>
+                  Unete a oportunidades de compra de alto volumen y crece junto a
+                  otros productores.
+                </p>
+                <div className="demo-hero-actions">
+                  <a className="demo-primary-button" href="#opportunities">
+                    Ver oportunidades <ArrowRight size={18} strokeWidth={2.4} />
+                  </a>
+                  <Link className="demo-light-button" to="/app/demand/new">
+                    Crear campaña
+                  </Link>
+                </div>
+              </div>
+              <img
+                src="/hero-collage.png"
+                alt="Productos y productores de Masa Critica"
+              />
+            </section>
+
+            <section className="opportunities" id="opportunities">
+              <div className="section-heading">
+                <h2>Oportunidades activas</h2>
+                <span>Ver todas</span>
+              </div>
+              <div className="opportunity-list">
+                {demoOpportunities.map((opportunity, index) => (
+                  <DemoOpportunityCard
+                    key={opportunity.title}
+                    opportunity={opportunity}
+                    onDetails={() =>
+                      index === 0
+                        ? router.navigate({
+                            to: "/app/demand/$id",
+                            params: { id: "0" },
+                          })
+                        : router.navigate({ to: "/app/demand/new" })
+                    }
+                  />
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <aside className="demo-right">
+            <section className="demo-panel">
+              <h2>Mi progreso</h2>
+              <p>Comprometido este mes</p>
+              <div className="progress-total">
+                <strong>$185,000 <small>MXN</small></strong>
+                <span>de $300,000</span>
+              </div>
+              <div className="demo-progress-track">
+                <span style={{ width: "62%" }} />
+              </div>
+              <div className="progress-stats">
+                <strong>3<span>Oportunidades activas</span></strong>
+                <strong>2<span>Ofertas enviadas</span></strong>
+                <strong>1<span>Compromiso activo</span></strong>
+              </div>
+            </section>
+
+            <section className="demo-panel">
+              <div className="section-heading">
+                <h2>Actividad reciente</h2>
+                <span>Ver todo</span>
+              </div>
+              <ActivityList />
+            </section>
+
+            <section className="demo-panel" id="commitments">
+              <div className="section-heading">
+                <h2>Compromisos en blockchain</h2>
+                <a
+                  href="https://testnet.monadvision.com/address/0xDCDCE6B9d60b22F2bF3bd5fAC7d33E60eb1eC197"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Ver explorer <ExternalLink size={15} strokeWidth={2.2} />
+                </a>
+              </div>
+              <div className="chain-card">
+                <span>Compromiso activo</span>
+                <div>
+                  <strong>Bebidas naturales para cafeterias</strong>
+                  <b>$85,000 MXN</b>
+                </div>
+                <p>
+                  Comprador: {buyerAccount.displayName} · Proveedor:{" "}
+                  {producerAccount.displayName} · Estado: Activo
+                </p>
+                <p>
+                  {shortDemoAddress(buyerAccount.address)} →{" "}
+                  {shortDemoAddress(producerAccount.address)}
+                </p>
+              </div>
+              <div className="chain-history">
+                <strong>Historial reciente</strong>
+                <p>Snacks saludables para OXXO <span>$55,000 MXN</span></p>
+                <p>Bebidas naturales para cafeterias <span>$45,000 MXN</span></p>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
     </div>
   );
 }
 
-function SupplierDashboard() {
+function shortDemoAddress(address: string) {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function DemoOpportunityCard({
+  opportunity,
+  onDetails,
+}: {
+  opportunity: DemoOpportunity;
+  onDetails: () => void;
+}) {
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
-        <h2>Demandas activas</h2>
+    <article className="opportunity-card" id="offers">
+      <div className={`opportunity-photo ${opportunity.imageClass}`}>
+        <span>{opportunity.status}</span>
       </div>
-      <DemandList filter="active" />
+      <div className="opportunity-body">
+        <div className="opportunity-title-row">
+          <h3>{opportunity.title}</h3>
+          <strong>{opportunity.target}<small>MXN objetivo</small></strong>
+        </div>
+        <div className="opportunity-meta">
+          <span><Star size={14} fill="currentColor" strokeWidth={0} /> {opportunity.buyer}</span>
+          <span><MapPin size={14} strokeWidth={2} /> {opportunity.location}</span>
+          <span><Calendar size={14} strokeWidth={2} /> Entrega: {opportunity.deadline}</span>
+        </div>
+        <p>{opportunity.description}</p>
+        <div className="opportunity-progress">
+          <span style={{ width: `${opportunity.progress}%` }} />
+          {opportunity.progress > 0 ? <b>{opportunity.progress}%</b> : null}
+        </div>
+        <div className="opportunity-footer">
+          <span className={opportunity.status === "Proxima" ? "warning-text" : ""}>
+            {opportunity.committed}
+          </span>
+          <span>{opportunity.remaining}</span>
+        </div>
+        <div className="provider-row">
+          {opportunity.providers > 0 ? (
+            <>
+              <span className="avatar-stack">
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+              <small>{opportunity.providers} proveedores unidos</small>
+            </>
+          ) : (
+            <small>Aun sin proveedores unidos</small>
+          )}
+          <button className="demo-card-button" onClick={onDetails} type="button">
+            {opportunity.action === "details" ? "Ver detalles" : "Recordarme"}
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ActivityList() {
+  const items: Array<[ActivityTone, string, string, string]> = [
+    ["cart", "Tu oferta fue aceptada", "Bebidas naturales para cafeterias", "Hace 2 horas"],
+    ["doc", "Nuevo compromiso registrado", "$85,000 MXN en Bebidas naturales", "Hace 5 horas"],
+    ["megaphone", "Nueva oportunidad publicada", "Snacks saludables en OXXO", "Hace 1 dia"],
+    ["chat", "Mensaje de Cafe Horizonte", "Interesados en tu oferta", "Hace 2 dias"],
+  ];
+
+  return (
+    <div className="activity-list">
+      {items.map(([tone, title, detail, time]) => (
+        <div className="activity-row" key={title}>
+          <span className={`activity-icon ${tone}`}>{activityIcon(tone)}</span>
+          <div>
+            <strong>{title}</strong>
+            <small>{detail}</small>
+          </div>
+          <time>{time}</time>
+        </div>
+      ))}
     </div>
   );
+}
+
+type ActivityTone = "cart" | "doc" | "megaphone" | "chat";
+
+function activityIcon(tone: ActivityTone) {
+  if (tone === "cart") return <ShoppingCart size={20} strokeWidth={2} />;
+  if (tone === "doc") return <FileText size={20} strokeWidth={2} />;
+  if (tone === "megaphone") return <Megaphone size={20} strokeWidth={2} />;
+  return <MessageCircle size={20} strokeWidth={2} />;
 }
 
 function DemandList({ filter }: { filter: "all" | "active" }) {

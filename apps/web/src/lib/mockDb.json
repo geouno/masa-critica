@@ -1,0 +1,55 @@
+{
+  "accounts": [
+    {
+      "address": "0x5f268b26427dA31CfaA6B650CFb6053347aFb98b",
+      "kind": "admin",
+      "role": "distributor",
+      "displayName": "Admin Masa Critica",
+      "initials": "MC",
+      "location": "Mexico",
+      "description": "Cuenta operativa para mint de Masa MXN y preparacion del demo.",
+      "verification": {
+        "status": "verified",
+        "label": "Operador Masa Critica",
+        "verifiedAt": "2026-04-25",
+        "verifier": "0x5f268b26427dA31CfaA6B650CFb6053347aFb98b"
+      },
+      "tags": ["admin", "mMXN", "demo"]
+    },
+    {
+      "address": "0xB56DadB72C5Da8e281d0cb866cAa1733638ca1ED",
+      "kind": "buyer",
+      "role": "distributor",
+      "displayName": "Alsea",
+      "legalName": "Alsea, S.A.B. de C.V.",
+      "initials": "AL",
+      "location": "Mexico",
+      "description": "Comprador verificado que publica oportunidades de volumen para cafeterias, restaurantes y cadenas.",
+      "verification": {
+        "status": "verified",
+        "label": "Cuenta verificada de Alsea",
+        "verifiedAt": "2026-04-25",
+        "verifier": "0x5f268b26427dA31CfaA6B650CFb6053347aFb98b"
+      },
+      "tags": ["comprador", "cafeterias", "restaurantes", "cadena"],
+      "logoSrc": "/brand-logos/alsea.svg"
+    },
+    {
+      "address": "0x397eb42E743376421ffDbB1C102E1Ea2A48ADdC2",
+      "kind": "producer",
+      "role": "supplier",
+      "displayName": "Alma de la Selva",
+      "legalName": "Alma de la Selva",
+      "initials": "AS",
+      "location": "Campeche, Mexico",
+      "description": "Productor de miel de la selva campechana y limonadas saludables listas para refrigerador.",
+      "verification": {
+        "status": "verified",
+        "label": "Productor verificado",
+        "verifiedAt": "2026-04-25",
+        "verifier": "0x5f268b26427dA31CfaA6B650CFb6053347aFb98b"
+      },
+      "tags": ["miel", "limonadas", "Campeche", "refrigerador"]
+    }
+  ]
+}

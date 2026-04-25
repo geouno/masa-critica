@@ -91,7 +91,7 @@ export function ConnectWalletButton({
       return (
         <div className="wallet">
           <a className="wallet-app-link" href="/app">
-            Go to app
+            Ir a la app
           </a>
         </div>
       );
@@ -99,9 +99,9 @@ export function ConnectWalletButton({
 
     return (
       <div className="wallet">
-        <span>Connected {shortAddress(address)}</span>
+        <span>Conectado {shortAddress(address)}</span>
         <button type="button" onClick={disconnectWallet}>
-          Disconnect
+          Desconectar
         </button>
       </div>
     );
@@ -123,10 +123,10 @@ export function ConnectWalletButton({
           onClick={() => connectWallet(connector)}
           type="button"
         >
-          {isPending ? "Connecting..." : `Connect ${connector.name}`}
+          {isPending ? "Conectando..." : `Conectar ${connector.name}`}
         </button>
       ))}
-      {visibleConnectors.length === 0 ? <p>No injected wallet found.</p> : null}
+      {visibleConnectors.length === 0 ? <p>No se encontró wallet.</p> : null}
       {error ? <p className="error">{error.message}</p> : null}
     </div>
   );

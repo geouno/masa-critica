@@ -68,7 +68,7 @@ export function DemandForm() {
 
   return (
     <form className="form-stack" onSubmit={handleSubmit}>
-      <h2>Crear demanda</h2>
+      <h2>Crear campaña</h2>
       <label className="form-label">
         Titulo
         <input
@@ -125,8 +125,8 @@ export function DemandForm() {
         {step === "approving"
           ? "Aprobando mMXN..."
           : step === "creating"
-            ? "Creando demanda..."
-            : "Crear demanda"}
+            ? "Creando campaña..."
+            : "Crear campaña"}
       </button>
     </form>
   );
