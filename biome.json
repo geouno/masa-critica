@@ -5,6 +5,7 @@
       "**",
       "!node_modules",
       "!dist",
+      "!worktrees",
       "!apps/**/dist",
       "!apps/**/node_modules"
     ]

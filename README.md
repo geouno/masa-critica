@@ -22,38 +22,81 @@ The best pitch shape is:
 4. Here is why Monad/EVM makes this credible.
 5. Here is the working demo.
 
-## Suggested Stack
+## Current Stack
 
-Use a TypeScript-first monorepo with Bun workspaces. Keep the build surface small, but structure it like a real product so we can move quickly without painting ourselves into a corner.
+This repo is a minimal TypeScript-first Bun workspace. The goal is to keep a clean base skeleton for hackathon experiments, then branch ideas into local worktrees without disturbing the working wallet/routing setup.
 
-Recommended layout:
+Current layout:
 
 ```txt
 apps/
-  web/          # React 19 + Vite frontend
-  agent/        # Mastra agents/workflows for AI features
-packages/
-  contracts/    # Solidity contracts, deployment scripts, ABIs
-  shared/       # Shared TypeScript types, schemas, constants
-  ui/           # Reusable React components if duplication appears
+  web/          # React 19 + Vite 8 frontend
+worktrees/      # local ignored git worktrees for feature experiments
 ```
 
-Core choices:
+Implemented choices:
 
 - **Runtime/package manager:** Bun with workspaces.
-- **Frontend:** React 19, Vite 8, TypeScript, Tailwind or CSS modules depending on setup speed.
-- **AI product layer:** Vercel AI SDK for chat/completion UX, streaming, and model calls from app routes or API handlers.
-- **Agent/workflow layer:** Mastra for structured AI workflows, tools, and repeatable "Fill with AI" or "Enhance by AI" flows. Verify Mastra APIs against the installed package docs before implementation.
-- **Contracts:** Solidity with Foundry if we want fast local testing and scripts; Hardhat only if team familiarity is stronger.
-- **Wallet/onchain:** Wagmi/Viem for typed wallet connection, contract reads, and contract writes.
-- **Validation:** Zod for all user-facing forms, AI outputs, and cross-package DTOs.
+- **Frontend:** React 19, Vite 8, TypeScript.
+- **Routing:** TanStack Router with `/` and protected `/app`.
+- **Wallet/onchain base:** Wagmi/Viem with explicit Brave Wallet and MetaMask injected-provider selection.
+- **Chain config:** Monad Testnet, chain id `10143`, RPC `https://testnet-rpc.monad.xyz`.
+- **Formatting/linting:** Biome.
+- **Backend:** none for now. Keep the demo browser-first unless AI API keys, persistence, indexing, or server-owned actions become necessary.
 
-Build the demo around one narrow onchain loop:
+The wallet setup intentionally uses injected providers. That means Brave Wallet and MetaMask are read from the browser's `window.ethereum` provider. We explicitly separate Brave from MetaMask because Brave can expose MetaMask-compatible flags, and generic injected discovery can produce confusing provider behavior.
 
-- User creates or improves structured business data with AI.
-- User reviews and confirms typed fields.
-- App writes a meaningful record, claim, quote, policy, invoice, asset, or settlement action on Monad.
-- UI shows transaction state and the resulting onchain record.
+The current app behavior is:
+
+- `/` shows a connect wallet button.
+- `/app` shows the protected app placeholder when connected.
+- Direct visits to `/app` wait for Wagmi reconnect before deciding whether to redirect.
+- Clicking disconnect sets an app-level disconnect preference so refreshes stay visually disconnected until the user clicks connect again.
+
+Likely expansion points, only when needed:
+
+- **Contracts:** add `packages/contracts` with Solidity and Foundry.
+- **Shared schemas:** add `packages/shared` when form, AI, contract, and route types start repeating.
+- **AI product layer:** add Vercel AI SDK for typed "Fill with AI" or "Enhance by AI" actions.
+- **Agent/workflow layer:** add Mastra only when a workflow needs tools, repeatable multi-step logic, or agent debugging. Verify Mastra APIs against installed docs before coding.
+- **Validation:** add Zod as soon as user-entered or AI-generated data feeds UI state or contract inputs.
+
+The preferred demo shape is still one narrow onchain loop:
+
+1. User creates or improves structured product data.
+2. User reviews and confirms typed fields.
+3. App writes one meaningful record, claim, quote, policy, invoice, asset, or settlement action on Monad.
+4. UI shows transaction state and the resulting onchain record.
+
+## Development
+
+Install dependencies:
+
+```sh
+bun install
+```
+
+Run the web app:
+
+```sh
+bun run dev
+```
+
+Check the project:
+
+```sh
+bun run lint
+bun run check
+bun run build
+```
+
+Create feature worktrees under the ignored `worktrees/` directory:
+
+```sh
+git worktree add worktrees/masa-critica -b feature/masa-critica
+```
+
+Use the main checkout as the clean base skeleton. Use worktrees for fast idea branches and messy product experiments.
 
 ## Coding Guidelines
 
@@ -70,6 +113,8 @@ Frontend first principles:
 - Avoid giant components. A good component has one job, clear props, and no hidden global assumptions.
 - Keep demo paths resilient: loading, empty, error, wallet-disconnected, transaction-pending, transaction-success, and AI-generating states should all exist.
 - Make UI copy concrete and pitch-friendly. The product should explain itself through labels, states, and results, not through a separate wall of instructions.
+- Keep route guards explicit. A protected route should handle loading/reconnecting, connected, disconnected, and explicitly-disconnected states.
+- Keep wallet behavior honest. App-level disconnect is not the same as revoking wallet site permission in Brave or MetaMask.
 
 AI feature guidelines:
 
