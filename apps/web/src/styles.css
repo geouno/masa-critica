@@ -314,11 +314,15 @@ code {
 
 .hero-word {
   display: inline-block;
-  font-style: italic;
 }
 
 .hero-word-green {
   color: var(--brand-green);
+  font-style: normal;
+  text-decoration: underline;
+  text-decoration-color: var(--brand-green);
+  text-decoration-thickness: 0.055em;
+  text-underline-offset: 0.08em;
 }
 
 .hero-word-purple {
