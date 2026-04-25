@@ -1,27 +1,21 @@
 import { useEffect, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 
-const disconnectPreferenceKey = "monad-blitz.wallet-disconnected";
+import {
+  clearDisconnectPreference,
+  getDisconnectPreference,
+  setDisconnectPreference,
+} from "../lib/disconnectPreference";
 
 function shortAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
-function getInitialDisconnectPreference() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return window.localStorage.getItem(disconnectPreferenceKey) === "true";
 }
 
 export function ConnectWalletButton() {
   const { address, isConnected } = useAccount();
   const { connect, connectors, error, isPending } = useConnect();
   const { disconnect } = useDisconnect();
-  const [userDisconnected, setUserDisconnected] = useState(
-    getInitialDisconnectPreference,
-  );
+  const [userDisconnected, setUserDisconnected] = useState(getDisconnectPreference);
 
   useEffect(() => {
     if (userDisconnected && isConnected) {
@@ -32,13 +26,13 @@ export function ConnectWalletButton() {
   const showConnected = isConnected && !userDisconnected;
 
   function connectWallet(connector: (typeof connectors)[number]) {
-    window.localStorage.removeItem(disconnectPreferenceKey);
+    clearDisconnectPreference();
     setUserDisconnected(false);
     connect({ connector });
   }
 
   function disconnectWallet() {
-    window.localStorage.setItem(disconnectPreferenceKey, "true");
+    setDisconnectPreference();
     setUserDisconnected(true);
     disconnect();
   }

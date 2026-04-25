@@ -16,7 +16,7 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <WagmiProvider config={wagmiConfig} reconnectOnMount={false}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <App />
       </QueryClientProvider>

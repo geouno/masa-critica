@@ -41,6 +41,13 @@ main {
   padding: 24px;
 }
 
+.page-stack {
+  align-items: center;
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+}
+
 .wallet {
   align-items: center;
   display: flex;
@@ -59,4 +66,15 @@ main {
   flex-basis: 100%;
   font-size: 14px;
   text-align: center;
+}
+
+.text-link {
+  color: #171717;
+  font-weight: 600;
+}
+
+.app-shell {
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  padding: 24px;
 }

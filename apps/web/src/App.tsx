@@ -1,9 +1,7 @@
-import { ConnectWalletButton } from "./components/ConnectWalletButton";
+import { RouterProvider } from "@tanstack/react-router";
+
+import { router } from "./routes";
 
 export function App() {
-  return (
-    <main>
-      <ConnectWalletButton />
-    </main>
-  );
+  return <RouterProvider router={router} />;
 }
