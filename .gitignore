@@ -3,3 +3,12 @@ dist
 .DS_Store
 *.tsbuildinfo
 worktrees/
+
+# Foundry / contract package
+packages/contracts/.env
+packages/contracts/.git/
+packages/contracts/.gitmodules
+packages/contracts/cache/
+packages/contracts/out/
+packages/contracts/broadcast/
+packages/contracts/lib/
