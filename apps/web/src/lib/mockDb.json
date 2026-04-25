@@ -51,5 +51,13 @@
       },
       "tags": ["miel", "limonadas", "Campeche", "refrigerador"]
     }
+  ],
+  "campaigns": [
+    {
+      "title": "Bebidas naturales para cafeterias",
+      "distributor": "0xB56DadB72C5Da8e281d0cb866cAa1733638ca1ED",
+      "imageUrl": "/hero-collage.png",
+      "description": "Buscamos bebidas naturales, listas para refrigerador, con empaque individual y 3+ meses de vida de anaquel."
+    }
   ]
 }

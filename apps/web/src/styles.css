@@ -1032,6 +1032,37 @@ textarea.form-input {
   padding-left: 20px;
 }
 
+.json-editor {
+  background: #fafafa;
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 12px;
+  resize: vertical;
+  width: 100%;
+}
+
+.json-editor:focus {
+  border-color: #171717;
+  outline: none;
+}
+
+.json-editor-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.demand-card-image {
+  background-position: center;
+  background-size: cover;
+  border-radius: 8px 8px 0 0;
+  height: 120px;
+  margin: -16px -16px 12px;
+}
+
 /* Demo dashboard */
 .demo-app {
   background:

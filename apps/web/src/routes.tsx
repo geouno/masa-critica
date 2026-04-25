@@ -46,7 +46,16 @@ import {
 import { useDemoStore } from "./lib/demoStore";
 import { shouldShowDemand } from "./lib/demoFilter";
 import { getDisconnectPreference } from "./lib/disconnectPreference";
-import { findMockAccount, getDemoAccountForRole, mockAccounts } from "./lib/mockDb";
+import {
+  clearDbOverrides,
+  findCampaignByTitle,
+  findMockAccount,
+  getDbOverridesJson,
+  getDemoAccountForRole,
+  getMockAccounts,
+  mockAccounts,
+  saveDbOverrides,
+} from "./lib/mockDb";
 import { clearRole, getRole, type Role, setRole } from "./lib/role";
 import { type MintInput, mintSchema } from "./lib/schemas";
 
@@ -260,6 +269,7 @@ type DemoOpportunity = {
   progress: number;
   status: "Activa" | "Proxima" | "Cerrada";
   providers: number;
+  imageUrl?: string;
   imageClass: string;
   action: "details" | "reminder";
 };
@@ -278,6 +288,7 @@ const demoOpportunities: DemoOpportunity[] = [
     progress: 62,
     status: "Activa",
     providers: 11,
+    imageUrl: "/hero-collage.png",
     imageClass: "opportunity-photo-collage",
     action: "details",
   },
@@ -318,10 +329,11 @@ function DemoDashboard({ role }: { role: Role }) {
   const { address } = useAccount();
   const router = useRouter();
   const account = findMockAccount(address) ?? getDemoAccountForRole(role);
+  const allAccounts = getMockAccounts();
   const buyerAccount =
-    mockAccounts.find((item) => item.kind === "buyer") ?? getDemoAccountForRole("distributor");
+    allAccounts.find((item) => item.kind === "buyer") ?? getDemoAccountForRole("distributor");
   const producerAccount =
-    mockAccounts.find((item) => item.kind === "producer") ?? getDemoAccountForRole("supplier");
+    allAccounts.find((item) => item.kind === "producer") ?? getDemoAccountForRole("supplier");
   const greeting = `Hola, ${account.displayName}!`;
 
   return (
@@ -573,6 +585,7 @@ function LiveOpportunityCard({ id }: { id: number }) {
   if (!shouldShowDemand(id, title)) return null;
 
   const buyer = findMockAccount(distributor)?.displayName ?? shortDemoAddress(distributor);
+  const campaign = findCampaignByTitle(title);
   const progress =
     targetAmount > 0n ? Number((committedAmount * 100n) / targetAmount) : 0;
   const deadlineDate = new Date(Number(deadline) * 1000);
@@ -590,6 +603,7 @@ function LiveOpportunityCard({ id }: { id: number }) {
     progress: Math.min(progress, 100),
     status: isActive && !isConsolidated ? "Activa" : "Cerrada",
     providers: Number(commitmentCount ?? 0n),
+    imageUrl: campaign?.imageUrl,
     imageClass: "opportunity-photo-collage",
     action: "details",
   };
@@ -613,7 +627,10 @@ function DemoOpportunityCard({
 }) {
   return (
     <article className="opportunity-card" id="offers">
-      <div className={`opportunity-photo ${opportunity.imageClass}`}>
+      <div
+        className={`opportunity-photo ${opportunity.imageUrl ? "" : opportunity.imageClass}`}
+        style={opportunity.imageUrl ? { backgroundImage: `url(${opportunity.imageUrl})` } : undefined}
+      >
         <span>{opportunity.status}</span>
       </div>
       <div className="opportunity-body">
@@ -767,7 +784,9 @@ function DemandLoader({ id, filter }: { id: number; filter: string }) {
 
   if (!shouldShowDemand(id, demand.title)) return null;
 
-  return <DemandCard id={id} demand={demand} />;
+  const campaign = findCampaignByTitle(demand.title);
+
+  return <DemandCard id={id} demand={demand} imageUrl={campaign?.imageUrl} />;
 }
 
 function CreateDemandPage() {
@@ -1037,6 +1056,8 @@ function AdminPage() {
     amountMXN: 100000,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [jsonEditor, setJsonEditor] = useState(() => getDbOverridesJson());
+  const [jsonError, setJsonError] = useState("");
   const { writeContract, isPending } = useWriteContract();
 
   if (!isConnected || address?.toLowerCase() !== ADMIN_ADDRESS.toLowerCase()) {
@@ -1182,7 +1203,7 @@ function AdminPage() {
               <code>msg.sender</code>, asi que admin no puede simular otra cuenta.
             </p>
             <div className="mock-account-list">
-              {mockAccounts.map((account) => (
+              {getMockAccounts().map((account) => (
                 <div className="mock-account-row" key={account.address}>
                   <div>
                     <strong>{account.displayName}</strong>
@@ -1209,6 +1230,63 @@ function AdminPage() {
               <li>Alma de la Selva: abre el detalle de la demanda y registra el compromiso.</li>
               <li>Alsea: cuando la meta este completa, consolida para liberar mMXN a proveedores.</li>
             </ol>
+          </div>
+          <div className="admin-shortcuts">
+            <h3>Mock DB overrides (localStorage)</h3>
+            <p className="text-muted">
+              Agrega cuentas o campañas que se mergearan con el JSON estatico. Las campañas
+              se asocian a demandas on-chain por titulo exacto y pueden llevar imageUrl.
+            </p>
+            <textarea
+              className="json-editor"
+              rows={14}
+              spellCheck={false}
+              value={jsonEditor}
+              onChange={(e) => {
+                setJsonEditor(e.target.value);
+                setJsonError("");
+              }}
+            />
+            {jsonError ? <span className="form-error">{jsonError}</span> : null}
+            <div className="json-editor-actions">
+              <button
+                className="btn-primary"
+                type="button"
+                onClick={() => {
+                  try {
+                    const parsed = JSON.parse(jsonEditor);
+                    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+                      throw new Error("El JSON debe ser un objeto con accounts y/o campaigns");
+                    }
+                    saveDbOverrides(parsed);
+                    setStatusMessage({
+                      tone: "success",
+                      title: "Overrides guardados",
+                      description: "Recarga la pagina para ver los cambios aplicados.",
+                    });
+                  } catch (err) {
+                    setJsonError(err instanceof Error ? err.message : "JSON invalido");
+                  }
+                }}
+              >
+                Guardar overrides
+              </button>
+              <button
+                className="btn-ghost"
+                type="button"
+                onClick={() => {
+                  clearDbOverrides();
+                  setJsonEditor(getDbOverridesJson());
+                  setStatusMessage({
+                    tone: "success",
+                    title: "Overrides limpiados",
+                    description: "Se eliminaron los datos customizados de localStorage.",
+                  });
+                }}
+              >
+                Reset
+              </button>
+            </div>
           </div>
         </div>
       </div>

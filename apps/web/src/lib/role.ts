@@ -2,11 +2,11 @@ export type Role = "distributor" | "supplier";
 
 const ROLE_KEY = "masa-critica.role";
 
-export function getRole(): Role | null {
-  if (typeof window === "undefined") return null;
+export function getRole(): Role {
+  if (typeof window === "undefined") return "supplier";
   const raw = window.localStorage.getItem(ROLE_KEY);
   if (raw === "distributor" || raw === "supplier") return raw;
-  return null;
+  return "supplier";
 }
 
 export function setRole(role: Role): void {
