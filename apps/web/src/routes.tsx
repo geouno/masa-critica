@@ -745,7 +745,7 @@ function DemoOpportunityCard({
             <small>Aun sin proveedores unidos</small>
           )}
           <button className="demo-card-button" onClick={onDetails} type="button">
-            {opportunity.action === "details" ? "Ver detalles" : "Recordarme"}
+            {opportunity.status === "Activa" ? "Ofertar" : "Ver detalles"}
           </button>
         </div>
       </div>
@@ -960,18 +960,18 @@ function DemandDetailView({ demandId, role }: { demandId: number; role: Role }) 
     role === "distributor" &&
     Boolean(address) &&
     address?.toLowerCase() === demand.distributor.toLowerCase();
+  const isAdmin = Boolean(address) && address?.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
   const isExpired = deadlineDate <= new Date();
   const canWithdraw =
-    role === "supplier" &&
     demand.isActive &&
     !demand.isConsolidated &&
     (supplierCommitted ?? 0n) > 0n;
   const canConsolidate =
-    isDistributor &&
+    (isDistributor || isAdmin) &&
     demand.isActive &&
     !demand.isConsolidated &&
     demand.committedAmount >= demand.targetAmount;
-  const canCancel = isDistributor && demand.isActive && !demand.isConsolidated && isExpired;
+  const canCancel = (isDistributor || isAdmin) && demand.isActive && !demand.isConsolidated && isExpired;
 
   async function submitPoolAction(
     action: "consolidateDemand" | "cancelDemand" | "withdrawCommitment",
@@ -1049,7 +1049,7 @@ function DemandDetailView({ demandId, role }: { demandId: number; role: Role }) 
 
       <CommitmentList demandId={demandId} />
 
-      {demand.isActive && !demand.isConsolidated && role === "supplier" && (
+      {demand.isActive && !demand.isConsolidated && (
         <CommitmentForm demandId={demandId} />
       )}
 
