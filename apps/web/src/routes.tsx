@@ -33,7 +33,7 @@ import { ConnectWalletButton } from "./components/ConnectWalletButton";
 import { DemandCard, type DemandRow } from "./components/DemandCard";
 import { DemandForm } from "./components/DemandForm";
 import { ProgressBar } from "./components/ProgressBar";
-import { Navbar, RoleSelector } from "./components/RoleSelector";
+import { Navbar } from "./components/RoleSelector";
 import {
   ADMIN_ADDRESS,
   CONSOLIDATION_POOL_ABI,
@@ -56,7 +56,7 @@ import {
   mockAccounts,
   saveDbOverrides,
 } from "./lib/mockDb";
-import { clearRole, getRole, type Role, setRole } from "./lib/role";
+import { clearRole, getRole, type Role } from "./lib/role";
 import { type MintInput, mintSchema } from "./lib/schemas";
 
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000" as const;
@@ -314,11 +314,6 @@ function DemoDashboard({ role }: { role: Role }) {
   const { address } = useAccount();
   const router = useRouter();
   const account = findMockAccount(address) ?? getDemoAccountForRole(role);
-  const allAccounts = getMockAccounts();
-  const buyerAccount =
-    allAccounts.find((item) => item.kind === "buyer") ?? getDemoAccountForRole("distributor");
-  const producerAccount =
-    allAccounts.find((item) => item.kind === "producer") ?? getDemoAccountForRole("supplier");
   const greeting = `Hola, ${account.displayName}!`;
 
   return (
@@ -458,31 +453,127 @@ function DemoDashboard({ role }: { role: Role }) {
                   Ver explorer <ExternalLink size={15} strokeWidth={2.2} />
                 </a>
               </div>
-              <div className="chain-card">
-                <span>Compromiso activo</span>
-                <div>
-                  <strong>Bebidas naturales para cafeterias</strong>
-                  <b>$85,000 MXN</b>
-                </div>
-                <p>
-                  Comprador: {buyerAccount.displayName} · Proveedor:{" "}
-                  {producerAccount.displayName} · Estado: Activo
-                </p>
-                <p>
-                  {shortDemoAddress(buyerAccount.address)} →{" "}
-                  {shortDemoAddress(producerAccount.address)}
-                </p>
-              </div>
-              <div className="chain-history">
-                <strong>Historial reciente</strong>
-                <p>Snacks saludables para OXXO <span>$55,000 MXN</span></p>
-                <p>Bebidas naturales para cafeterias <span>$45,000 MXN</span></p>
-              </div>
+              <CompletedDemandList />
             </section>
           </aside>
         </div>
       </section>
     </div>
+  );
+}
+
+function CompletedDemandList() {
+  const { data: count } = useReadContract({
+    address: CONSOLIDATION_POOL_ADDRESS,
+    abi: CONSOLIDATION_POOL_ABI,
+    functionName: "demandCount",
+    query: { refetchInterval: 8000 },
+  });
+
+  if (count === undefined || count === 0n) {
+    return <p className="text-muted">Aun no hay operaciones completadas.</p>;
+  }
+
+  const ids = [...Array(Number(count))].map((_, i) => Number(count) - 1 - i);
+
+  return (
+    <>
+      {ids.map((id) => (
+        <CompletedDemandRow key={`completed-${id}`} id={id} />
+      ))}
+    </>
+  );
+}
+
+function CompletedDemandRow({ id }: { id: number }) {
+  const { data } = useReadContract({
+    address: CONSOLIDATION_POOL_ADDRESS,
+    abi: CONSOLIDATION_POOL_ABI,
+    functionName: "demands",
+    args: [BigInt(id)],
+    query: { refetchInterval: 8000 },
+  });
+
+  if (!data) return null;
+
+  const [
+    distributor,
+    targetAmount,
+    _deadline,
+    committedAmount,
+    title,
+    _description,
+    isActive,
+    isConsolidated,
+  ] = data as unknown as readonly [
+    `0x${string}`,
+    bigint,
+    bigint,
+    bigint,
+    string,
+    string,
+    boolean,
+    boolean,
+  ];
+
+  if (!isConsolidated) return null;
+  if (!shouldShowDemand(id, title)) return null;
+
+  const buyer = findMockAccount(distributor)?.displayName ?? shortDemoAddress(distributor);
+
+  return (
+    <>
+      <div className="chain-card">
+        <span>Completado</span>
+        <div>
+          <strong>{title}</strong>
+          <b>${formatMXN(committedAmount)} MXN</b>
+        </div>
+        <p>Comprador: {buyer} · Estado: Completado</p>
+        <CompletedDemandSuppliers demandId={id} />
+      </div>
+    </>
+  );
+}
+
+function CompletedDemandSuppliers({ demandId }: { demandId: number }) {
+  const { data: commitmentCount } = useReadContract({
+    address: CONSOLIDATION_POOL_ADDRESS,
+    abi: CONSOLIDATION_POOL_ABI,
+    functionName: "getCommitmentCount",
+    args: [BigInt(demandId)],
+    query: { refetchInterval: 8000 },
+  });
+
+  if (!commitmentCount || commitmentCount === 0n) return null;
+
+  return (
+    <>
+      {[...Array(Number(commitmentCount))].map((_, i) => (
+        <CompletedSupplierRow key={`cs-${demandId}-${i}`} demandId={demandId} index={i} />
+      ))}
+    </>
+  );
+}
+
+function CompletedSupplierRow({ demandId, index }: { demandId: number; index: number }) {
+  const { data } = useReadContract({
+    address: CONSOLIDATION_POOL_ADDRESS,
+    abi: CONSOLIDATION_POOL_ABI,
+    functionName: "getCommitment",
+    args: [BigInt(demandId), BigInt(index)],
+    query: { refetchInterval: 8000 },
+  });
+
+  if (!data) return null;
+
+  const [supplier, amount] = data as unknown as readonly [`0x${string}`, bigint, string, string];
+  const supplierName = findMockAccount(supplier)?.displayName ?? shortDemoAddress(supplier);
+
+  return (
+    <p>
+      {shortDemoAddress(supplier)} → {supplierName} · ${formatMXN(amount)} MXN
+    </p>
   );
 }
 
