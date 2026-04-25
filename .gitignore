@@ -2,6 +2,12 @@ node_modules
 dist
 .DS_Store
 *.tsbuildinfo
+.env
+.env.*
+!.env.example
+apps/web/.env
+apps/web/.env.*
+!apps/web/.env.example
 worktrees/
 
 # Foundry / contract package

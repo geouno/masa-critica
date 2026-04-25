@@ -12,6 +12,9 @@ export function CommitmentList({ demandId }: { demandId: number }) {
     abi: CONSOLIDATION_POOL_ABI,
     functionName: "getCommitmentCount",
     args: [BigInt(demandId)],
+    query: {
+      refetchInterval: 4000,
+    },
   });
 
   if (!count || count === 0n) {
@@ -38,6 +41,9 @@ function CommitmentRow({ demandId, index }: { demandId: number; index: number })
     abi: CONSOLIDATION_POOL_ABI,
     functionName: "getCommitment",
     args: [BigInt(demandId), BigInt(index)],
+    query: {
+      refetchInterval: 4000,
+    },
   });
 
   if (!data) return null;

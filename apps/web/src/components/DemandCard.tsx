@@ -13,7 +13,7 @@ export type DemandRow = {
   isConsolidated: boolean;
 };
 
-export function DemandCard({ id, demand }: { id: number; demand: DemandRow }) {
+export function DemandCard({ id, demand, imageUrl }: { id: number; demand: DemandRow; imageUrl?: string }) {
   const navigate = useNavigate();
   const progress =
     demand.targetAmount > 0n
@@ -32,6 +32,9 @@ export function DemandCard({ id, demand }: { id: number; demand: DemandRow }) {
         navigate({ to: "/app/demand/$id", params: { id: String(id) } });
       }}
     >
+      {imageUrl ? (
+        <div className="demand-card-image" style={{ backgroundImage: `url(${imageUrl})` }} />
+      ) : null}
       <div className="demand-card-header">
         <span className="demand-card-title">{demand.title}</span>
         {demand.isConsolidated ? (
