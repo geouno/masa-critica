@@ -1,3 +1,51 @@
+@font-face {
+  font-display: swap;
+  font-family: "Martina Plantijn";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/fonts/martina-plantijn-regular.otf") format("opentype");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Martina Plantijn";
+  font-style: italic;
+  font-weight: 400;
+  src: url("/fonts/martina-plantijn-italic.otf") format("opentype");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Martina Plantijn";
+  font-style: normal;
+  font-weight: 700;
+  src: url("/fonts/martina-plantijn-bold.otf") format("opentype");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Martina Plantijn";
+  font-style: italic;
+  font-weight: 700;
+  src: url("/fonts/martina-plantijn-bold-italic.otf") format("opentype");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Martina Plantijn";
+  font-style: normal;
+  font-weight: 900;
+  src: url("/fonts/martina-plantijn-black.otf") format("opentype");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Martina Plantijn";
+  font-style: italic;
+  font-weight: 900;
+  src: url("/fonts/martina-plantijn-black-italic.otf") format("opentype");
+}
+
 :root {
   --background: #f8f4f1;
   --surface: #f4f4f1;
@@ -256,7 +304,7 @@ code {
 
 .hero-copy h1 {
   color: var(--text-main);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Martina Plantijn", Georgia, "Times New Roman", serif;
   font-size: clamp(56px, 6.45vw, 98px);
   font-weight: 900;
   letter-spacing: 0;
@@ -275,6 +323,7 @@ code {
 
 .hero-word-purple {
   color: var(--brand-purple);
+  font-style: normal;
   position: relative;
   white-space: nowrap;
 }
@@ -319,6 +368,7 @@ code {
   display: inline-flex;
   gap: 18px;
   font-size: 16px;
+  font-family: "Martina Plantijn", Georgia, "Times New Roman", serif;
   font-weight: 900;
   justify-content: space-between;
   min-height: 52px;
