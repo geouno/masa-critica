@@ -815,6 +815,46 @@ textarea.form-input {
   font-size: 12px;
 }
 
+.form-inline {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.form-status {
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+}
+
+.form-status strong {
+  font-size: 14px;
+}
+
+.form-status span {
+  color: #525252;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.form-status-info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.form-status-success {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.form-status-error {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
 .btn-primary {
   background: #171717;
   border: 1px solid #171717;
@@ -829,6 +869,12 @@ textarea.form-input {
 
 .btn-block {
   width: 100%;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 /* Demand Detail */
@@ -951,6 +997,39 @@ textarea.form-input {
   padding-top: 16px;
   display: grid;
   gap: 8px;
+}
+
+.mock-account-list {
+  display: grid;
+  gap: 10px;
+}
+
+.mock-account-row {
+  align-items: center;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 12px;
+}
+
+.mock-account-row div {
+  display: grid;
+  gap: 4px;
+}
+
+.mock-account-row span {
+  color: #525252;
+  font-size: 13px;
+}
+
+.demo-runbook {
+  color: #525252;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
 }
 
 /* Demo dashboard */

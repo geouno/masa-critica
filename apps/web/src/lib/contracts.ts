@@ -1,5 +1,5 @@
 import type { Address } from "viem";
-import { parseAbi } from "viem";
+import { formatUnits, parseAbi, parseUnits } from "viem";
 
 export const MASA_MXN_ADDRESS = "0xD34E7d8ad6316E112e6df273c6C7b5b5004B8795" as Address;
 export const CONSOLIDATION_POOL_ADDRESS =
@@ -34,17 +34,19 @@ export const CONSOLIDATION_POOL_ABI = parseAbi([
 export const MXN_DECIMALS = 18;
 const MXN_DIVISOR = 10n ** 18n;
 
-export function parseMXN(value: number): bigint {
-  return BigInt(Math.round(value * 10 ** MXN_DECIMALS));
+export function parseMXN(value: number | string): bigint {
+  const normalized = String(value).trim();
+  if (!/^\d+(\.\d{1,18})?$/.test(normalized)) {
+    throw new Error("Invalid MXN amount");
+  }
+  return parseUnits(normalized, MXN_DECIMALS);
 }
 
 export function formatMXN(value: bigint | undefined): string {
   if (value === undefined || value === null) return "0.00";
-  const v = BigInt(value);
-  const int = v / MXN_DIVISOR;
-  const frac = v % MXN_DIVISOR;
-  const fracStr = frac.toString().padStart(MXN_DECIMALS, "0").slice(0, 2);
-  return `${Number(int).toLocaleString()}.${fracStr}`;
+  const [int, frac = ""] = formatUnits(value, MXN_DECIMALS).split(".");
+  const formattedInt = Number(int).toLocaleString();
+  return `${formattedInt}.${frac.padEnd(2, "0").slice(0, 2)}`;
 }
 
 export function formatMXNCompact(value: bigint): string {

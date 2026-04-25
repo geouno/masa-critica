@@ -26,7 +26,7 @@ import {
   User,
 } from "lucide-react";
 import { useState } from "react";
-import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useWriteContract } from "wagmi";
 import { CommitmentForm } from "./components/CommitmentForm";
 import { CommitmentList } from "./components/CommitmentList";
 import { ConnectWalletButton } from "./components/ConnectWalletButton";
@@ -43,6 +43,8 @@ import {
   MASA_MXN_ADDRESS,
   parseMXN,
 } from "./lib/contracts";
+import { useDemoStore } from "./lib/demoStore";
+import { shouldShowDemand } from "./lib/demoFilter";
 import { getDisconnectPreference } from "./lib/disconnectPreference";
 import { findMockAccount, getDemoAccountForRole, mockAccounts } from "./lib/mockDb";
 import { clearRole, getRole, type Role, setRole } from "./lib/role";
@@ -256,7 +258,7 @@ type DemoOpportunity = {
   committed: string;
   remaining: string;
   progress: number;
-  status: "Activa" | "Proxima";
+  status: "Activa" | "Proxima" | "Cerrada";
   providers: number;
   imageClass: string;
   action: "details" | "reminder";
@@ -418,22 +420,7 @@ function DemoDashboard({ role }: { role: Role }) {
                 <h2>Oportunidades activas</h2>
                 <span>Ver todas</span>
               </div>
-              <div className="opportunity-list">
-                {demoOpportunities.map((opportunity, index) => (
-                  <DemoOpportunityCard
-                    key={opportunity.title}
-                    opportunity={opportunity}
-                    onDetails={() =>
-                      index === 0
-                        ? router.navigate({
-                            to: "/app/demand/$id",
-                            params: { id: "0" },
-                          })
-                        : router.navigate({ to: "/app/demand/new" })
-                    }
-                  />
-                ))}
-              </div>
+              <LiveOpportunityList router={router} />
             </section>
           </div>
 
@@ -504,6 +491,117 @@ function DemoDashboard({ role }: { role: Role }) {
 
 function shortDemoAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function LiveOpportunityList({ router }: { router: ReturnType<typeof useRouter> }) {
+  const { data: count } = useReadContract({
+    address: CONSOLIDATION_POOL_ADDRESS,
+    abi: CONSOLIDATION_POOL_ABI,
+    functionName: "demandCount",
+    query: {
+      refetchInterval: 4000,
+    },
+  });
+
+  if (count === undefined || count === 0n) {
+    return (
+      <div className="opportunity-list">
+        {demoOpportunities.map((opportunity) => (
+          <DemoOpportunityCard
+            key={opportunity.title}
+            opportunity={opportunity}
+            onDetails={() => router.navigate({ to: "/app/demand/new" })}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="opportunity-list">
+      {[...Array(Number(count))].reverse().map((_, index) => {
+        const id = Number(count) - 1 - index;
+        return <LiveOpportunityCard id={id} key={`live-opportunity-${id}`} />;
+      })}
+    </div>
+  );
+}
+
+function LiveOpportunityCard({ id }: { id: number }) {
+  const router = useRouter();
+  const { data } = useReadContract({
+    address: CONSOLIDATION_POOL_ADDRESS,
+    abi: CONSOLIDATION_POOL_ABI,
+    functionName: "demands",
+    args: [BigInt(id)],
+    query: {
+      refetchInterval: 4000,
+    },
+  });
+  const { data: commitmentCount } = useReadContract({
+    address: CONSOLIDATION_POOL_ADDRESS,
+    abi: CONSOLIDATION_POOL_ABI,
+    functionName: "getCommitmentCount",
+    args: [BigInt(id)],
+    query: {
+      refetchInterval: 4000,
+    },
+  });
+
+  if (!data) return null;
+
+  const [
+    distributor,
+    targetAmount,
+    deadline,
+    committedAmount,
+    title,
+    description,
+    isActive,
+    isConsolidated,
+  ] = data as unknown as readonly [
+    `0x${string}`,
+    bigint,
+    bigint,
+    bigint,
+    string,
+    string,
+    boolean,
+    boolean,
+  ];
+
+  if (!shouldShowDemand(id, title)) return null;
+
+  const buyer = findMockAccount(distributor)?.displayName ?? shortDemoAddress(distributor);
+  const progress =
+    targetAmount > 0n ? Number((committedAmount * 100n) / targetAmount) : 0;
+  const deadlineDate = new Date(Number(deadline) * 1000);
+  const remaining = targetAmount > committedAmount ? targetAmount - committedAmount : 0n;
+  const opportunity: DemoOpportunity = {
+    title,
+    buyer,
+    location: "On-chain en Monad Testnet",
+    deadline: deadlineDate.toLocaleDateString("es-MX"),
+    description,
+    target: `$${formatMXN(targetAmount)}`,
+    committed: `$${formatMXN(committedAmount)} comprometido`,
+    remaining:
+      remaining > 0n ? `$${formatMXN(remaining)} restante` : "Meta alcanzada",
+    progress: Math.min(progress, 100),
+    status: isActive && !isConsolidated ? "Activa" : "Cerrada",
+    providers: Number(commitmentCount ?? 0n),
+    imageClass: "opportunity-photo-collage",
+    action: "details",
+  };
+
+  return (
+    <DemoOpportunityCard
+      opportunity={opportunity}
+      onDetails={() =>
+        router.navigate({ to: "/app/demand/$id", params: { id: String(id) } })
+      }
+    />
+  );
 }
 
 function DemoOpportunityCard({
@@ -600,6 +698,9 @@ function DemandList({ filter }: { filter: "all" | "active" }) {
     address: CONSOLIDATION_POOL_ADDRESS,
     abi: CONSOLIDATION_POOL_ABI,
     functionName: "demandCount",
+    query: {
+      refetchInterval: 4000,
+    },
   });
 
   if (count === undefined) {
@@ -625,6 +726,9 @@ function DemandLoader({ id, filter }: { id: number; filter: string }) {
     abi: CONSOLIDATION_POOL_ABI,
     functionName: "demands",
     args: [BigInt(id)],
+    query: {
+      refetchInterval: 4000,
+    },
   });
 
   if (!data) return null;
@@ -661,6 +765,8 @@ function DemandLoader({ id, filter }: { id: number; filter: string }) {
 
   if (filter === "active" && (!demand.isActive || demand.isConsolidated)) return null;
 
+  if (!shouldShowDemand(id, demand.title)) return null;
+
   return <DemandCard id={id} demand={demand} />;
 }
 
@@ -696,22 +802,118 @@ function DemandDetailPage() {
 }
 
 function DemandDetailView({ demandId, role }: { demandId: number; role: Role }) {
+  const { address } = useAccount();
+  const publicClient = usePublicClient();
+  const { statusMessage, setStatusMessage } = useDemoStore();
   const { data } = useReadContract({
     address: CONSOLIDATION_POOL_ADDRESS,
     abi: CONSOLIDATION_POOL_ABI,
     functionName: "demands",
     args: [BigInt(demandId)],
+    query: {
+      refetchInterval: 4000,
+    },
   });
-  const { writeContract, isPending } = useWriteContract();
+  const { data: supplierCommitted } = useReadContract({
+    address: CONSOLIDATION_POOL_ADDRESS,
+    abi: CONSOLIDATION_POOL_ABI,
+    functionName: "supplierCommitted",
+    args: [BigInt(demandId), address ?? ZERO_ADDR],
+    query: {
+      enabled: Boolean(address),
+      refetchInterval: 4000,
+    },
+  });
+  const { writeContractAsync, isPending } = useWriteContract();
 
   if (!data) return <p className="text-muted">Cargando...</p>;
 
-  const demand = data as unknown as DemandRow;
+  const [
+    distributor,
+    targetAmount,
+    deadline,
+    committedAmount,
+    title,
+    description,
+    isActive,
+    isConsolidated,
+  ] = data as unknown as readonly [
+    `0x${string}`,
+    bigint,
+    bigint,
+    bigint,
+    string,
+    string,
+    boolean,
+    boolean,
+  ];
+  const demand: DemandRow = {
+    distributor,
+    targetAmount,
+    deadline,
+    committedAmount,
+    title,
+    description,
+    isActive,
+    isConsolidated,
+  };
+  if (!shouldShowDemand(demandId, demand.title)) {
+    return <p className="text-muted">Demanda no encontrada.</p>;
+  }
   const deadlineDate = new Date(Number(demand.deadline) * 1000);
+  const isDistributor =
+    role === "distributor" &&
+    Boolean(address) &&
+    address?.toLowerCase() === demand.distributor.toLowerCase();
+  const isExpired = deadlineDate <= new Date();
+  const canWithdraw =
+    role === "supplier" &&
+    demand.isActive &&
+    !demand.isConsolidated &&
+    (supplierCommitted ?? 0n) > 0n;
   const canConsolidate =
+    isDistributor &&
     demand.isActive &&
     !demand.isConsolidated &&
     demand.committedAmount >= demand.targetAmount;
+  const canCancel = isDistributor && demand.isActive && !demand.isConsolidated && isExpired;
+
+  async function submitPoolAction(
+    action: "consolidateDemand" | "cancelDemand" | "withdrawCommitment",
+  ) {
+    if (!publicClient) return;
+    const labels = {
+      consolidateDemand: "Consolidando demanda",
+      cancelDemand: "Cancelando demanda",
+      withdrawCommitment: "Retirando compromiso",
+    };
+    try {
+      setStatusMessage({
+        tone: "info",
+        title: labels[action],
+        description: "Confirma la transaccion y espera a que Monad la mine.",
+      });
+      const hash = await writeContractAsync({
+        address: CONSOLIDATION_POOL_ADDRESS,
+        abi: CONSOLIDATION_POOL_ABI,
+        functionName: action,
+        args: [BigInt(demandId)],
+      });
+      await publicClient.waitForTransactionReceipt({ hash });
+      setStatusMessage({
+        tone: "success",
+        title: "Estado actualizado",
+        description: "La accion ya quedo registrada on-chain.",
+      });
+    } catch (error) {
+      setStatusMessage({
+        tone: "error",
+        title: "No se pudo ejecutar la accion",
+        description:
+          error instanceof Error ? error.message : "La wallet rechazo o fallo la transaccion.",
+      });
+    }
+  }
 
   return (
     <div className="demand-detail">
@@ -726,6 +928,12 @@ function DemandDetailView({ demandId, role }: { demandId: number; role: Role }) 
         )}
       </div>
       <p>{demand.description}</p>
+      {statusMessage ? (
+        <div className={`form-status form-status-${statusMessage.tone}`}>
+          <strong>{statusMessage.title}</strong>
+          <span>{statusMessage.description}</span>
+        </div>
+      ) : null}
 
       <ProgressBar current={demand.committedAmount} target={demand.targetAmount} />
 
@@ -750,23 +958,38 @@ function DemandDetailView({ demandId, role }: { demandId: number; role: Role }) 
         <CommitmentForm demandId={demandId} />
       )}
 
-      {canConsolidate && (
-        <button
-          className="btn-primary btn-block"
-          disabled={isPending}
-          onClick={() =>
-            writeContract({
-              address: CONSOLIDATION_POOL_ADDRESS,
-              abi: CONSOLIDATION_POOL_ABI,
-              functionName: "consolidateDemand",
-              args: [BigInt(demandId)],
-            })
-          }
-          type="button"
-        >
-          {isPending ? "Consolidando..." : "Consolidar demanda"}
-        </button>
-      )}
+      <div className="action-row">
+        {canWithdraw ? (
+          <button
+            className="btn-ghost"
+            disabled={isPending}
+            onClick={() => submitPoolAction("withdrawCommitment")}
+            type="button"
+          >
+            Retirar mi compromiso
+          </button>
+        ) : null}
+        {canCancel ? (
+          <button
+            className="btn-ghost"
+            disabled={isPending}
+            onClick={() => submitPoolAction("cancelDemand")}
+            type="button"
+          >
+            Cancelar demanda
+          </button>
+        ) : null}
+        {canConsolidate ? (
+          <button
+            className="btn-primary"
+            disabled={isPending}
+            onClick={() => submitPoolAction("consolidateDemand")}
+            type="button"
+          >
+            {isPending ? "Consolidando..." : "Consolidar demanda"}
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -808,6 +1031,7 @@ function SettingsPage() {
 
 function AdminPage() {
   const { isConnected, address } = useAccount();
+  const { statusMessage, setStatusMessage } = useDemoStore();
   const [form, setForm] = useState<MintInput>({
     to: "",
     amountMXN: 100000,
@@ -836,7 +1060,45 @@ function AdminPage() {
       abi: MASA_MXN_ABI,
       functionName: "mint",
       args: [form.to as `0x${string}`, parseMXN(form.amountMXN)],
+    }, {
+      onSuccess: () =>
+        setStatusMessage({
+          tone: "success",
+          title: "Mint enviado",
+          description: "La wallet ya recibio la solicitud de mint de mMXN.",
+        }),
+      onError: (error) =>
+        setStatusMessage({
+          tone: "error",
+          title: "Mint fallido",
+          description: error.message,
+        }),
     });
+  }
+
+  function mintTo(addressToFund: `0x${string}`, amountMXN: number) {
+    writeContract(
+      {
+        address: MASA_MXN_ADDRESS,
+        abi: MASA_MXN_ABI,
+        functionName: "mint",
+        args: [addressToFund, parseMXN(amountMXN)],
+      },
+      {
+        onSuccess: () =>
+          setStatusMessage({
+            tone: "success",
+            title: "Mint enviado",
+            description: `Solicitud enviada para fondear ${addressToFund.slice(0, 6)}...${addressToFund.slice(-4)}.`,
+          }),
+        onError: (error) =>
+          setStatusMessage({
+            tone: "error",
+            title: "Mint fallido",
+            description: error.message,
+          }),
+      },
+    );
   }
 
   return (
@@ -845,6 +1107,12 @@ function AdminPage() {
       <div className="app-content">
         <div className="admin">
           <h2>Admin</h2>
+          {statusMessage ? (
+            <div className={`form-status form-status-${statusMessage.tone}`}>
+              <strong>{statusMessage.title}</strong>
+              <span>{statusMessage.description}</span>
+            </div>
+          ) : null}
           <div className="admin-contracts">
             <p>
               mMXN: <code>{MASA_MXN_ADDRESS}</code>
@@ -905,6 +1173,42 @@ function AdminPage() {
             >
               Mint 100K mMXN to me
             </button>
+          </div>
+          <div className="admin-shortcuts">
+            <h3>Demo accounts</h3>
+            <p className="text-muted">
+              Fondea las identidades estaticas. Para crear eventos como Alsea o Alma de
+              la Selva, cambia a esa wallet y usa el flujo normal; el contrato usa
+              <code>msg.sender</code>, asi que admin no puede simular otra cuenta.
+            </p>
+            <div className="mock-account-list">
+              {mockAccounts.map((account) => (
+                <div className="mock-account-row" key={account.address}>
+                  <div>
+                    <strong>{account.displayName}</strong>
+                    <span>{account.verification.label}</span>
+                    <code>{account.address}</code>
+                  </div>
+                  <button
+                    className="btn-ghost"
+                    disabled={isPending}
+                    onClick={() => mintTo(account.address, account.kind === "buyer" ? 500000 : 100000)}
+                    type="button"
+                  >
+                    Mint {account.kind === "buyer" ? "500K" : "100K"} mMXN
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="admin-shortcuts">
+            <h3>Runbook de demo on-chain</h3>
+            <ol className="demo-runbook">
+              <li>Admin: mint 500K mMXN a Alsea y 100K mMXN a Alma de la Selva.</li>
+              <li>Alsea: abre Crear demanda, escribe "productos para el refri del starbucks", usa Sugerir y crea la oportunidad.</li>
+              <li>Alma de la Selva: abre el detalle de la demanda y registra el compromiso.</li>
+              <li>Alsea: cuando la meta este completa, consolida para liberar mMXN a proveedores.</li>
+            </ol>
           </div>
         </div>
       </div>
