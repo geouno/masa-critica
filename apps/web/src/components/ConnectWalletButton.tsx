@@ -7,11 +7,15 @@ import {
   setDisconnectPreference,
 } from "../lib/disconnectPreference";
 
+type ConnectWalletButtonProps = {
+  compact?: boolean;
+};
+
 function shortAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export function ConnectWalletButton() {
+export function ConnectWalletButton({ compact = false }: ConnectWalletButtonProps) {
   const { address, isConnected } = useAccount();
   const { connect, connectors, error, isPending } = useConnect();
   const { disconnect } = useDisconnect();
@@ -24,6 +28,7 @@ export function ConnectWalletButton() {
   }, [disconnect, isConnected, userDisconnected]);
 
   const showConnected = isConnected && !userDisconnected;
+  const walletClassName = compact ? "wallet wallet-compact" : "wallet";
 
   function connectWallet(connector: (typeof connectors)[number]) {
     clearDisconnectPreference();
@@ -39,7 +44,7 @@ export function ConnectWalletButton() {
 
   if (showConnected && address) {
     return (
-      <div className="wallet">
+      <div className={walletClassName}>
         <span>Connected {shortAddress(address)}</span>
         <button type="button" onClick={disconnectWallet}>
           Disconnect
@@ -49,7 +54,7 @@ export function ConnectWalletButton() {
   }
 
   return (
-    <div className="wallet">
+    <div className={walletClassName}>
       {connectors.map((connector) => (
         <button
           disabled={isPending}
