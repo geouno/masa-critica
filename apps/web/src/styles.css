@@ -500,6 +500,10 @@ code {
   width: 100%;
 }
 
+.trusted-logo-duplicate {
+  display: none;
+}
+
 .impact-grid {
   background: rgba(251, 250, 247, 0.48);
   border: 1px solid rgba(212, 212, 206, 0.52);
@@ -1858,14 +1862,14 @@ textarea.form-input {
   }
 
   .landing-hero {
-    gap: 16px;
+    gap: 12px;
     padding: 12px max(16px, env(safe-area-inset-right))
       max(28px, calc(22px + env(safe-area-inset-bottom)))
       max(16px, env(safe-area-inset-left));
   }
 
   .hero-main {
-    gap: 28px;
+    gap: 18px;
     min-height: 0;
     padding-top: 0;
   }
@@ -1875,7 +1879,25 @@ textarea.form-input {
   }
 
   .hero-copy h1 {
-    font-size: clamp(52px, 17vw, 76px);
+    font-size: clamp(46px, 15.5vw, 68px);
+    max-width: 100%;
+    overflow-wrap: break-word;
+  }
+
+  .hero-word {
+    display: inline;
+  }
+
+  .hero-word-purple {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.08em;
+    white-space: normal;
+  }
+
+  .hero-word-purple::after {
+    display: none;
   }
 
   .hero-subtitle {
@@ -1895,27 +1917,112 @@ textarea.form-input {
   }
 
   .hero-image-frame {
-    max-height: min(58vh, 360px);
-    max-width: min(92vw, 360px);
+    max-height: min(44svh, 300px);
+    max-width: min(82vw, 300px);
   }
 
   .hero-collage {
-    max-height: min(58vh, 360px);
+    max-height: min(44svh, 300px);
   }
 
-  .trusted-strip,
   .impact-grid {
     border-radius: 16px;
     padding: 18px;
   }
 
+  .trusted-strip {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    max-width: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 6px 0 2px;
+    width: 100%;
+  }
+
+  .trusted-strip p {
+    color: var(--text-main);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 11px;
+    font-weight: 900;
+    gap: 3px;
+    justify-content: center;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    margin: 0;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0 16px;
+    text-align: center;
+    text-transform: uppercase;
+    width: 100%;
+  }
+
+  .trusted-strip p span {
+    color: var(--text-muted);
+  }
+
   .trusted-logos {
-    grid-template-columns: repeat(2, minmax(86px, 1fr));
+    align-self: flex-start;
+    animation: trusted-logo-scroll 18s linear infinite;
+    display: flex;
+    gap: 30px;
+    margin: 0;
+    max-width: none;
+    min-width: max-content;
+    overflow: visible;
+    padding: 0;
+    scroll-padding: 0;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    width: max-content;
+    will-change: transform;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .trusted-strip:hover .trusted-logos,
+  .trusted-strip:focus-within .trusted-logos {
+    animation-play-state: paused;
+  }
+
+  .trusted-logos::-webkit-scrollbar {
+    display: none;
   }
 
   .trusted-logos img {
-    justify-self: start;
-    max-height: 36px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    flex: 0 0 118px;
+    height: 38px;
+    max-height: none;
+    max-width: none;
+    padding: 0;
+    scroll-snap-align: start;
+    width: 118px;
+  }
+
+  .trusted-logo-duplicate {
+    display: block;
+  }
+
+  .trusted-more {
+    align-self: center;
+    color: var(--text-subtle);
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    justify-self: center;
+    line-height: 1;
+    margin-top: -2px;
+    text-transform: uppercase;
   }
 
   .impact-grid {
@@ -2053,5 +2160,37 @@ textarea.form-input {
 
   .activity-row time {
     justify-self: start;
+  }
+}
+
+@keyframes trusted-logo-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trusted-logos {
+    animation: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero-copy h1 {
+    font-size: clamp(39px, 13.5vw, 50px);
+  }
+
+  .hero-subtitle {
+    font-size: 15px;
+  }
+
+  .hero-primary,
+  .hero-secondary {
+    min-height: 48px;
+    padding: 0 16px;
   }
 }

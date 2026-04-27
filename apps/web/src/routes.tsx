@@ -182,8 +182,16 @@ function HomePage() {
               <span>confían en nosotros</span>
             </p>
             <div className="trusted-logos">
-              {trustedLogos.map((logo) => (
-                <img key={logo.name} src={logo.src} alt={logo.name} />
+              {[...trustedLogos, ...trustedLogos].map((logo, index) => (
+                <img
+                  key={`${logo.name}-${index}`}
+                  className={
+                    index >= trustedLogos.length ? "trusted-logo-duplicate" : undefined
+                  }
+                  src={logo.src}
+                  alt={index < trustedLogos.length ? logo.name : ""}
+                  aria-hidden={index >= trustedLogos.length}
+                />
               ))}
             </div>
             <span className="trusted-more">y más...</span>
