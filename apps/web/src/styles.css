@@ -1876,6 +1876,7 @@ textarea.form-input {
 
   .hero-copy {
     gap: 18px;
+    order: 2;
   }
 
   .hero-copy h1 {
@@ -1917,12 +1918,13 @@ textarea.form-input {
   }
 
   .hero-image-frame {
-    max-height: min(44svh, 300px);
-    max-width: min(82vw, 300px);
+    max-width: 100%;
+    order: 1;
   }
 
   .hero-collage {
-    max-height: min(44svh, 300px);
+    max-height: none;
+    width: min(100%, 430px);
   }
 
   .impact-grid {
