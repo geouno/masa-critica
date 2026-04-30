@@ -118,6 +118,34 @@ function HomePage() {
     },
   ];
 
+  function TrustedStrip({ className = "" }: { className?: string }) {
+    return (
+      <section
+        className={`trusted-strip ${className}`}
+        aria-label="Empresas de referencia"
+      >
+        <p>
+          Grandes distribuidores
+          <span>confían en nosotros</span>
+        </p>
+        <div className="trusted-logos">
+          {[...trustedLogos, ...trustedLogos].map((logo, index) => (
+            <img
+              key={`${logo.name}-${index}`}
+              className={
+                index >= trustedLogos.length ? "trusted-logo-duplicate" : undefined
+              }
+              src={logo.src}
+              alt={index < trustedLogos.length ? logo.name : ""}
+              aria-hidden={index >= trustedLogos.length}
+            />
+          ))}
+        </div>
+        <span className="trusted-more">y más...</span>
+      </section>
+    );
+  }
+
   return (
     <div className="landing-page">
       <section className="landing-section" id="hero">
@@ -150,6 +178,7 @@ function HomePage() {
                 <span className="hero-word hero-word-green">exposición</span>{" "}
                 <span className="hero-word hero-word-purple">como nunca antes</span>
               </h1>
+              <TrustedStrip className="trusted-strip-mobile" />
               <p className="hero-subtitle">
                 Masa Crítica conecta negocios pequeños con grandes oportunidades al
                 combinar ofertas, alcanzar volumen colectivo y abrir acceso a compradores
@@ -176,28 +205,15 @@ function HomePage() {
             </div>
           </div>
 
-          <section className="trusted-strip" aria-label="Empresas de referencia">
-            <p>
-              Grandes distribuidores
-              <span>confían en nosotros</span>
-            </p>
-            <div className="trusted-logos">
-              {[...trustedLogos, ...trustedLogos].map((logo, index) => (
-                <img
-                  key={`${logo.name}-${index}`}
-                  className={
-                    index >= trustedLogos.length ? "trusted-logo-duplicate" : undefined
-                  }
-                  src={logo.src}
-                  alt={index < trustedLogos.length ? logo.name : ""}
-                  aria-hidden={index >= trustedLogos.length}
-                />
-              ))}
-            </div>
-            <span className="trusted-more">y más...</span>
-          </section>
+          <TrustedStrip className="trusted-strip-desktop" />
         </div>
       </section>
+
+      <p className="hero-subtitle-mobile">
+        Masa Crítica conecta negocios pequeños con grandes oportunidades al combinar
+        ofertas, alcanzar volumen colectivo y abrir acceso a compradores que antes
+        parecían lejanos.
+      </p>
 
       <section className="impact-grid" id="impacto" aria-label="Impacto">
         {impactItems.map((item) => (

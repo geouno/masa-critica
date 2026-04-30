@@ -390,6 +390,10 @@ code {
   max-width: 640px;
 }
 
+.hero-subtitle-mobile {
+  display: none;
+}
+
 .hero-actions {
   align-items: center;
   display: flex;
@@ -501,6 +505,10 @@ code {
 }
 
 .trusted-logo-duplicate {
+  display: none;
+}
+
+.trusted-strip-mobile {
   display: none;
 }
 
@@ -1875,13 +1883,14 @@ textarea.form-input {
   }
 
   .hero-copy {
-    gap: 18px;
+    gap: 14px;
     order: 2;
   }
 
   .hero-copy h1 {
-    font-size: clamp(46px, 15.5vw, 68px);
-    max-width: 100%;
+    font-size: clamp(32px, 10.2vw, 44px);
+    line-height: 0.94;
+    max-width: calc(100vw - 32px);
     overflow-wrap: break-word;
   }
 
@@ -1890,11 +1899,15 @@ textarea.form-input {
   }
 
   .hero-word-purple {
+    display: block;
+    font-size: clamp(34px, calc((100vw - 32px) / 8.12), 48px);
+    line-height: 0.92;
+    max-width: calc(100vw - 32px);
     text-decoration: underline;
     text-decoration-color: var(--accent);
     text-decoration-thickness: 0.06em;
     text-underline-offset: 0.08em;
-    white-space: normal;
+    white-space: nowrap;
   }
 
   .hero-word-purple::after {
@@ -1902,7 +1915,16 @@ textarea.form-input {
   }
 
   .hero-subtitle {
-    font-size: 16px;
+    display: none;
+  }
+
+  .hero-subtitle-mobile {
+    color: var(--text-main);
+    display: block;
+    font-size: 15px;
+    line-height: 1.38;
+    margin: 0 max(16px, env(safe-area-inset-right)) 16px
+      max(16px, env(safe-area-inset-left));
   }
 
   .hero-actions {
@@ -1932,6 +1954,10 @@ textarea.form-input {
     padding: 18px;
   }
 
+  .trusted-strip-desktop {
+    display: none;
+  }
+
   .trusted-strip {
     align-items: center;
     background: transparent;
@@ -1948,11 +1974,19 @@ textarea.form-input {
     width: 100%;
   }
 
+  .trusted-strip-mobile {
+    display: flex;
+  }
+
+  .trusted-strip.trusted-strip-desktop {
+    display: none;
+  }
+
   .trusted-strip p {
     color: var(--text-main);
     display: flex;
     flex-wrap: wrap;
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 900;
     gap: 3px;
     justify-content: center;
@@ -2183,10 +2217,14 @@ textarea.form-input {
 
 @media (max-width: 380px) {
   .hero-copy h1 {
-    font-size: clamp(39px, 13.5vw, 50px);
+    font-size: clamp(29px, 9.4vw, 36px);
   }
 
-  .hero-subtitle {
+  .hero-word-purple {
+    font-size: clamp(32px, calc((100vw - 32px) / 8.12), 40px);
+  }
+
+  .hero-subtitle-mobile {
     font-size: 15px;
   }
 
