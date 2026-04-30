@@ -409,7 +409,7 @@ code {
   display: inline-flex;
   gap: 18px;
   font-size: 16px;
-  font-family: "Martina Plantijn", Georgia, "Times New Roman", serif;
+  font-family: inherit;
   font-weight: 900;
   justify-content: space-between;
   min-height: 52px;
